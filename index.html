@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bater Ponto via QR Code</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+    body, html {
+      height: 100%;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #eee;
+      padding: 20px;
+    }
+    #container {
+      width: 100%;
+      max-width: 450px;
+      background: #121212;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+      overflow: hidden;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00d2ff;
+      text-shadow: 0 0 6px #00d2ff88;
+      margin-bottom: 15px;
+    }
+    #reader {
+      width: 100%;
+      border: 2px solid #00d2ff;
+      border-radius: 10px;
+      padding: 10px;
+      background: #1a1a1a;
+    }
+    label {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      color: #ccc;
+    }
+    select, input, button {
+      margin-top: 5px;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      width: 100%;
+    }
+    select, input {
+      background: #222;
+      color: #eee;
+    }
+    button {
+      background: #00d2ff;
+      color: #121212;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      box-shadow: 0 0 12px #00d2ffaa;
+      transition: background 0.3s, transform 0.2s;
+    }
+    button:hover:not(:disabled) {
+      background: #00f0ff;
+      transform: scale(1.02);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    #qrResult {
+      text-align: center;
+      font-size: 1rem;
+      color: #4caf50;
+      margin-top: 10px;
+    }
+    @media (max-width: 500px) {
+      #container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+
+  <!-- Leitor de QR Code -->
+  <section id="qrScreen" style="display: flex; flex-direction: column; align-items: center;">
+    <h2>Escaneie seu QR Code</h2>
+    <div id="reader"></div>
+    <div id="qrResult"></div>
+  </section>
+
+  <!-- Formulário -->
+  <section id="formScreen" style="display: none; flex-direction: column;">
+    <h2 id="welcomeText"></h2>
+    <form id="registroForm">
+      <label for="area">Área:</label>
+      <select id="area" required>
+        <option value="" disabled selected>Selecione a área</option>
+        <option>Marcenaria Estrutural</option>
+        <option>Marcenaria Móvel</option>
+        <option>Elétrica</option>
+        <option>Piso</option>
+        <option>Hidráulica</option>
+        <option>Outro</option>
+      </select>
+
+      <label for="projeto">Projeto:</label>
+      <select id="projeto" required>
+        <option value="" disabled selected>Selecione o projeto</option>
+        <option>CDS</option>
+        <option>VDS</option>
+        <option>ODS</option>
+        <option>TDS</option>
+        <option>BDS</option>
+        <option>TELM</option>
+        <option>TOT</option>
+        <option>FÁBRICA</option>
+        <option>LOGÍSTICA</option>
+        <option>EXTERNO</option>
+      </select>
+
+      <label for="numeroProjeto">Número do Projeto:</label>
+      <input type="text" id="numeroProjeto" placeholder="Ex: 123" required>
+
+      <label for="horaInicio">Hora de Início:</label>
+      <select id="horaInicio" required></select>
+
+      <label for="horaFim">Hora de Fim:</label>
+      <select id="horaFim" required></select>
+
+      <button type="submit">Registrar</button>
+    </form>
+  </section>
+
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
+<script>
+  const qrScreen = document.getElementById("qrScreen");
+  const formScreen = document.getElementById("formScreen");
+  const welcomeText = document.getElementById("welcomeText");
+  const registroForm = document.getElementById("registroForm");
+  const areaSelect = document.getElementById("area");
+  const projetoSelect = document.getElementById("projeto");
+  const numeroProjeto = document.getElementById("numeroProjeto");
+  const horaInicio = document.getElementById("horaInicio");
+  const horaFim = document.getElementById("horaFim");
+
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1tiKAbqyt_2UIi453JOwhtMKq6dmu05Qf-d4i8LpFwD2eTJlu0U0iW0G5-J_taZO4RQ/exec"; // 🔁 Troque aqui pela sua URL
+
+  let html5QrCode;
+  let currentUser = null;
+
+  function getHoje() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function horaAgora() {
+    return new Date().toTimeString().slice(0, 5);
+  }
+
+  function gerarHorarios() {
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        const hora = h.toString().padStart(2, '0');
+        const minuto = m.toString().padStart(2, '0');
+        const time = `${hora}:${minuto}`;
+        horaInicio.add(new Option(time, time));
+        horaFim.add(new Option(time, time));
+      }
+    }
+  }
+
+  function registrarPonto(id, nome, area, projeto, numero, inicio, fim) {
+    const payload = {
+      id,
+      nome,
+      area,
+      projeto,
+      numeroProjeto: numero,
+      horaInicio: inicio,
+      horaFim: fim,
+      data: getHoje(),
+      horaRegistro: horaAgora()
+    };
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+
+  }
+
+  function qrCodeSuccessCallback(qrCodeMessage) {
+    try {
+      const data = JSON.parse(qrCodeMessage);
+      currentUser = { id: data.id, nome: data.nome };
+
+      qrScreen.style.display = "none";
+      formScreen.style.display = "flex";
+      welcomeText.textContent = `Olá, ${currentUser.nome}! Preencha os dados abaixo.`;
+
+      html5QrCode.stop();
+    } catch {
+      alert("QR inválido. Tente novamente.");
+    }
+  }
+
+  function iniciarLeitorQR() {
+    html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      qrCodeSuccessCallback,
+      error => {}
+    );
+  }
+
+  registroForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const area = areaSelect.value;
+    const projeto = projetoSelect.value;
+    const numero = numeroProjeto.value.trim();
+    const inicio = horaInicio.value;
+    const fim = horaFim.value;
+
+    if (!currentUser) {
+      alert("Nenhum QR Code foi escaneado.");
+      return;
+    }
+
+    if (!area || !projeto || !numero || !inicio || !fim) {
+      alert("Preencha todos os campos.");
+      return;
+    }
+
+    if (inicio >= fim) {
+      alert("Hora de início deve ser menor que a de fim.");
+      return;
+    }
+
+    const botao = registroForm.querySelector('button[type="submit"]');
+    botao.disabled = true;
+    botao.textContent = "Enviando...";
+
+    registrarPonto(currentUser.id, currentUser.nome, area, projeto, numero, inicio, fim);
+
+    setTimeout(() => {
+      botao.textContent = "Enviado";
+
+      setTimeout(() => {
+        botao.textContent = "Registrar";
+        botao.disabled = false;
+
+        alert(`${currentUser.nome}, ponto registrado às ${horaAgora()}.`);
+
+        registroForm.reset();
+        formScreen.style.display = "none";
+        qrScreen.style.display = "flex";
+        welcomeText.textContent = "";
+        currentUser = null;
+
+        iniciarLeitorQR();
+      }, 2000);
+
+    }, 500);
+  });
+
+  window.addEventListener("load", () => {
+    gerarHorarios();
+    iniciarLeitorQR();
+  });
+</script>
+</body>
+</html>

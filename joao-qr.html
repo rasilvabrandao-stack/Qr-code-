@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Code - João da Silva</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    canvas {
+      border: 2px solid #222;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    .info {
+      margin-top: 20px;
+      font-size: 0.95rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>QR Code - JOÃO DA SILVA</h2>
+  <canvas id="qrcode"></canvas>
+
+  <div class="info">
+    Conteúdo do QR Code:<br>
+    <code>{"id":"2349","nome":"JOÃO DA SILVA"}</code>
+  </div>
+
+  <script>
+    // Conteúdo do QR Code (JSON convertido em string)
+    const funcionario = {
+      id: "2349",
+      nome: "JOÃO DA SILVA"
+    };
+
+    // Gerar QR Code no canvas
+    QRCode.toCanvas(
+      document.getElementById('qrcode'),
+      JSON.stringify(funcionario),
+      {
+        width: 220,
+        color: {
+          dark: "#000000",
+          light: "#ffffff"
+        }
+      },
+      function (error) {
+        if (error) console.error(error);
+        else console.log("QR Code gerado com sucesso!");
+      }
+    );
+  </script>
+
+</body>
+</html>

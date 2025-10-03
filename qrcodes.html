@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Codes - Funcionários</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+    }
+
+    .qrcode-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 260px;
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    canvas {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .info {
+      font-size: 0.85rem;
+      color: #555;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>QR Codes - Funcionários</h2>
+  <div class="qrcode-container" id="qrcodes"></div>
+
+  <script>
+    const funcionarios = [
+      { id: "001", nome: "BRUNO GOMES DA SILVA" },
+      { id: "002", nome: "JOSÉ ADRIANO DE SIQUEIRA ARAÚJO" },
+      { id: "003", nome: "MANUEL PEREIRA ALENCAR JUNIOR" },
+      { id: "004", nome: "NEUSVALDO NOVAIS RODRIGUES" },
+      { id: "005", nome: "RONALDO GONCALVES DA SILVA" },
+      { id: "006", nome: "TIAGO FELIPE DOS SANTOS COELHO" },
+      { id: "007", nome: "DENILSON DE SOUZA SANTOS" },
+      { id: "008", nome: "FELIPE DE LIMA PEREIRA" },
+      { id: "009", nome: "JOSE CARLOS FIGUEIRA DA SILVA" },
+      { id: "010", nome: "JOSE GENILSOS MARTINS SOARES" },
+      { id: "011", nome: "NETANIS DOS SANTOS" },
+      { id: "012", nome: "THIAGO PACHECO ALMEIDA" },
+      { id: "013", nome: "ROBERTO CARLOS DA SILVA" },
+      { id: "014", nome: "WESLEY ALEKSANDER ALCANTIDA SILVA" },
+      { id: "015", nome: "VALDEMIR GOMES JUNIOR" }
+    ];
+
+    const container = document.getElementById('qrcodes');
+
+    funcionarios.forEach(funcionario => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const title = document.createElement('h3');
+      title.textContent = funcionario.nome;
+      card.appendChild(title);
+
+      const canvas = document.createElement('canvas');
+      card.appendChild(canvas);
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      const json = JSON.stringify(funcionario);
+      info.innerHTML = `Conteúdo do QR Code:<br><code>${json}</code>`;
+      card.appendChild(info);
+
+      container.appendChild(card);
+
+      QRCode.toCanvas(canvas, json, {
+        width: 220,
+        color: {
+          dark: "#000000",
+          light: "#ffffff"
+        }
+      }, function (error) {
+        if (error) console.error(error);
+      });
+    });
+  </script>
+
+</body>
+</html>
